@@ -11,6 +11,7 @@ const validUrl = value => {
 };
 const profile = PORTFOLIO.profile;
 const apps = {
+  welcome: ['Welcome · Sameer', 'user', 900, 650, welcomeApp],
   resume: ['Resume', 'resume', 820, 620, resumeApp], projects: ['Projects', 'folder', 820, 560, projectsApp],
   about: ['System Properties', 'user', 700, 500, aboutApp], skills: ['Control Panel · Skills', 'skills', 760, 560, skillsApp],
   experience: ['Experience', 'experience', 720, 540, experienceApp], education: ['Education', 'education', 720, 500, educationApp],
@@ -21,6 +22,8 @@ const apps = {
 const appOrder = Object.keys(apps).filter(key => key !== 'personalize');
 const pinned = ['resume', 'projects', 'about', 'skills', 'contact'];
 let wins = [], current = null, z = 20, phase = 'boot', timer, allPrograms = false, showDesk = false;
+let suppressDesktopClickUntil = 0;
+let portfolioVolume = 70, soundMuted = false, wifiEnabled = true, connectedNetwork = 'Orbitbot Wi-Fi';
 let items = [
   ['resume', 'Resume', 'resume', 'resume'], ['projects', 'Projects', 'folder', 'projects'], ['about', 'About Me', 'user', 'about'],
   ['skills', 'Skills', 'skills', 'skills'], ['experience', 'Experience', 'experience', 'experience'], ['education', 'Education', 'education', 'education'],
@@ -54,6 +57,10 @@ function launch(key, options = {}) {
   el.setAttribute('aria-label', config.title);
   $('.window-title', el).textContent = config.title;
   $('.window-icon use', el).setAttribute('href', `#i-${config.icon}`);
+  if (mobile) {
+    $('.maximize', el).title = 'Restore down';
+    $('.maximize', el).setAttribute('aria-label', 'Restore down');
+  }
   win.task = document.createElement('button'); win.task.type = 'button'; win.task.className = 'task-button'; win.task.title = config.title;
   win.task.setAttribute('aria-label', config.title); win.task.innerHTML = `${svg(config.icon)}<span>${esc(config.title)}</span>`;
   win.task.onclick = () => win.min || current !== win ? focus(win) : minimize(win);
@@ -88,6 +95,10 @@ function maximize(win) {
     const r = win.el.getBoundingClientRect(); win.rect = { width: `${r.width}px`, height: `${r.height}px`, left: `${r.left}px`, top: `${r.top}px` };
     win.el.classList.add('maximized');
   }
+  const isMaximized = win.el.classList.contains('maximized');
+  const button = $('.maximize', win.el);
+  button.title = isMaximized ? 'Restore down' : 'Maximize';
+  button.setAttribute('aria-label', isMaximized ? 'Restore down' : 'Maximize');
   focus(win);
 }
 function closeWindow(win) {
@@ -107,7 +118,7 @@ function link(label, value, cls = 'action-button') {
   return url ? `<a class="${cls}" href="${esc(url)}" target="_blank" rel="noopener">${esc(label)}</a>` : `<button class="${cls}" type="button" disabled title="Coming soon">${esc(label)}</button>`;
 }
 function resumeMarkup() {
-  return `<article class="resume-sheet"><header class="resume-header"><div><h1>${esc(profile.name)}</h1></div><div class="resume-contact"><a href="mailto:${esc(profile.email)}">${esc(profile.email)}</a><a href="tel:${esc(profile.phone.replace(/[^+\d]/g, ''))}">${esc(profile.phone)}</a><a href="${esc(profile.links.linkedin)}">linkedin.com/in/sameerog</a><a href="${esc(profile.links.github)}">github.com/md2004sameer</a><a href="${esc(profile.links.leetcode)}">leetcode.com/u/sameerog</a></div></header><section><h2>Summary</h2><p>${esc(profile.bio)}</p></section><section><h2>Education</h2>${PORTFOLIO.education.map(e => `<p><strong>${esc(e.institution)}${e.location ? `, ${esc(e.location)}` : ''}</strong> <span>${esc(e.dates)}</span><br>${esc(e.degree)}</p>`).join('')}</section>${PORTFOLIO.experience.length ? `<section><h2>Experience</h2>${PORTFOLIO.experience.map(e => `<p><strong>${esc(e.role)} · ${esc(e.company)}</strong> · ${esc(e.dates)}</p><ul>${e.bullets.map(b => `<li>${esc(b)}</li>`).join('')}</ul></section>`).join('')}` : ''}<section><h2>Projects</h2>${PORTFOLIO.projects.map(p => `<section><h3>${esc(p.name)}</h3><p>${link('GitHub', p.github, 'text-link')} ${link('Live project', p.live, 'text-link')}</p><ul>${p.description.map(line => `<li>${esc(line)}</li>`).join('')}</ul></section>`).join('')}</section><section><h2>Technical Skills</h2>${PORTFOLIO.skills.map(g => `<p><strong>${esc(g.category)}:</strong> ${g.items.map(esc).join(', ')}</p>`).join('')}</section><section><h2>Achievements</h2><ul>${PORTFOLIO.achievements.map(item => `<li>${esc(item)}</li>`).join('')}</ul></section></article>`;
+  return `<article class="resume-sheet"><header class="resume-header"><div><h1>${esc(profile.name)}</h1></div><div class="resume-contact"><a href="mailto:${esc(profile.email)}">${esc(profile.email)}</a><a href="tel:${esc(profile.phone.replace(/[^+\d]/g, ''))}">${esc(profile.phone)}</a><a href="${esc(profile.links.portfolio)}">me.orbitbot.in</a><a href="${esc(profile.links.linkedin)}">linkedin.com/in/sameerog</a><a href="${esc(profile.links.github)}">github.com/md2004sameer</a><a href="${esc(profile.links.leetcode)}">leetcode.com/u/sameerog</a></div></header><section><h2>Summary</h2><p>${esc(profile.bio)}</p></section><section><h2>Education</h2>${PORTFOLIO.education.map(e => `<p><strong>${esc(e.institution)}${e.location ? `, ${esc(e.location)}` : ''}</strong> <span>${esc(e.dates)}</span><br>${esc(e.degree)}</p>`).join('')}</section>${PORTFOLIO.experience.length ? `<section><h2>Experience</h2>${PORTFOLIO.experience.map(e => `<p><strong>${esc(e.role)} · ${esc(e.company)}</strong> · ${esc(e.dates)}</p><ul>${e.bullets.map(b => `<li>${esc(b)}</li>`).join('')}</ul></section>`).join('')}` : ''}<section><h2>Projects</h2>${PORTFOLIO.projects.map(p => `<section><h3>${esc(p.name)}</h3><p>${link('GitHub', p.github, 'text-link')} ${link('Live project', p.live, 'text-link')}</p><ul>${p.description.map(line => `<li>${esc(line)}</li>`).join('')}</ul></section>`).join('')}</section><section><h2>Technical Skills</h2>${PORTFOLIO.skills.map(g => `<p><strong>${esc(g.category)}:</strong> ${g.items.map(esc).join(', ')}</p>`).join('')}</section><section><h2>Achievements</h2><ul>${PORTFOLIO.achievements.map(item => `<li>${esc(item)}</li>`).join('')}</ul></section></article>`;
 }
 function resumeApp(body) {
   body.innerHTML = `<div class="toolbar"><a class="tool-button" href="${esc(profile.resume)}" download>Download PDF</a><button class="tool-button print" type="button">Print</button><a class="tool-button" href="${esc(profile.resume)}" target="_blank" rel="noopener">Open in new tab</a><span class="toolbar-spacer"></span><button class="tool-button zoomout" type="button" aria-label="Zoom out">−</button><button class="tool-button zoomin" type="button" aria-label="Zoom in">+</button></div><div class="resume-scroll"><div class="resume-content">${resumeMarkup()}</div></div><div class="resume-footer">HTML resume preview works without the PDF. <a href="${esc(profile.resume)}" download>Download resume</a></div>`;
@@ -118,16 +129,18 @@ function resumeApp(body) {
 }
 function readme(project) { return `${project.name}\n${'='.repeat(project.name.length)}\n\n${project.tagline}\n\n${project.description.map(line => `- ${line}`).join('\n')}\n\nTech stack: ${project.stack.join(', ')}\nStatus: ${project.status}\n`; }
 function projectsApp(body) {
-  let path = ['Computer', 'Projects'], back = [], forward = [], details = true;
+  let path = ['Computer', 'Projects'], back = [], forward = [], details = true, selectedSlug = '';
   body.innerHTML = `<div class="explorer-toolbar"><button class="back" type="button" aria-label="Back">◀</button><button class="forward" type="button" aria-label="Forward">▶</button><div class="address"></div><span class="view-switch"><button class="details" type="button">Details</button><button class="large" type="button">Large icons</button></span></div><div class="explorer-layout"><aside class="navigation-pane"><strong>Favorites</strong><button data-nav="Projects">Projects</button><button data-nav="Computer">Computer</button></aside><div class="explorer-files"></div></div><footer class="explorer-status"></footer>`;
   const files = $('.explorer-files', body);
   const render = () => {
     $('.address', body).innerHTML = path.map((part, i) => `<button data-crumb="${i}" type="button">${esc(part)}</button>`).join('<b>›</b>');
     $('.back', body).disabled = !back.length; $('.forward', body).disabled = !forward.length; files.classList.toggle('large-view', !details);
     if (path.at(-1) === 'Projects') {
-      files.innerHTML = PORTFOLIO.projects.map(p => `<button class="file-item" type="button" data-slug="${esc(p.slug)}">${svg('folder')}<span><strong>${esc(p.name)}</strong><small>${esc(p.status)}</small></span><span class="file-tagline">${esc(p.tagline)}</span></button>`).join('');
-      $('.explorer-status', body).textContent = `${PORTFOLIO.projects.length} project folders`;
+      files.innerHTML = PORTFOLIO.projects.map(p => `<button class="file-item${p.slug === selectedSlug ? ' selected' : ''}" type="button" data-slug="${esc(p.slug)}">${svg('folder')}<span><strong>${esc(p.name)}</strong><small>${esc(p.status)}</small></span><span class="file-tagline">${esc(p.tagline)}</span></button>`).join('');
+      const selected = PORTFOLIO.projects.find(project => project.slug === selectedSlug);
+      $('.explorer-status', body).textContent = selected ? `${selected.name} · ${selected.status}` : `${PORTFOLIO.projects.length} project folders`;
     } else {
+      selectedSlug = '';
       files.innerHTML = `<button class="file-item" data-open-projects type="button">${svg('folder')}<strong>Projects</strong></button>`;
       $('.explorer-status', body).textContent = '1 folder';
     }
@@ -135,7 +148,14 @@ function projectsApp(body) {
   const go = next => { back.push(path); path = next; forward = []; render(); };
   body.onclick = event => {
     const folder = event.target.closest('[data-slug]');
-    if (folder) { $$('.file-item.selected', files).forEach(item => item.classList.remove('selected')); folder.classList.add('selected'); return; }
+    if (folder) {
+      selectedSlug = folder.dataset.slug;
+      $$('.file-item.selected', files).forEach(item => item.classList.remove('selected'));
+      folder.classList.add('selected');
+      const selected = PORTFOLIO.projects.find(project => project.slug === selectedSlug);
+      $('.explorer-status', body).textContent = selected ? `${selected.name} · ${selected.status}` : `${PORTFOLIO.projects.length} project folders`;
+      return;
+    }
     if (event.target.closest('[data-open-projects]')) { go(['Computer', 'Projects']); return; }
     const nav = event.target.closest('[data-nav]'); if (nav) { go(nav.dataset.nav === 'Computer' ? ['Computer'] : ['Computer', 'Projects']); return; }
     const crumb = event.target.closest('[data-crumb]'); if (crumb) go(path.slice(0, Number(crumb.dataset.crumb) + 1));
@@ -148,12 +168,51 @@ function projectsApp(body) {
   render();
 }
 function projectApp(body, project) {
-  body.innerHTML = `<article class="project-detail"><header class="project-heading"><p class="eyebrow">PROJECT FILE</p><h1>${esc(project.name)}</h1><span class="status-badge">${esc(project.status)}</span><p class="project-tagline">${esc(project.tagline)}</p></header><section><h2>Overview</h2><ul class="project-points">${project.description.map(line => `<li>${esc(line)}</li>`).join('')}</ul></section><section><h2>Technology</h2><div class="tag-list">${project.stack.map(tag => `<span>${esc(tag)}</span>`).join('')}</div></section><section class="project-actions">${link('Open Live Project', project.live)}${link('View on GitHub', project.github)}</section><div class="project-readme-file">${svg('notepad')}<span><strong>README.txt</strong><small>Text document</small></span><button class="readme-open" type="button">Open</button></div></article>`;
+  body.innerHTML = `<div class="explorer-toolbar project-navigation"><button class="project-back" type="button" aria-label="Back to Projects" title="Back to Projects">◀</button><div class="address"><button type="button" data-projects-root>Computer</button><b>›</b><button type="button" data-projects-root>Projects</button><b>›</b><span>${esc(project.name)}</span></div></div><article class="project-detail"><header class="project-heading"><p class="eyebrow">PROJECT FILE</p><h1>${esc(project.name)}</h1><span class="status-badge">${esc(project.status)}</span><p class="project-tagline">${esc(project.tagline)}</p></header><section><h2>Overview</h2><ul class="project-points">${project.description.map(line => `<li>${esc(line)}</li>`).join('')}</ul></section><section><h2>Technology</h2><div class="tag-list">${project.stack.map(tag => `<span>${esc(tag)}</span>`).join('')}</div></section><section class="project-actions">${link('Open Live Project', project.live)}${link('View on GitHub', project.github)}</section><div class="project-readme-file">${svg('notepad')}<span><strong>README.txt</strong><small>Text document</small></span><button class="readme-open" type="button">Open</button></div></article><footer class="explorer-status project-status">${project.status} · ${project.stack.length} technologies · ${project.description.length} highlights</footer>`;
+  body.onclick = event => {
+    if (event.target.closest('.project-back, [data-projects-root]')) launch('projects');
+  };
   $('.readme-open', body).onclick = () => launch('notepad', { title: `${project.name} · README.txt`, text: readme(project) });
 }
 function aboutApp(body) {
   const url = PORTFOLIO.experience[0]?.url;
   body.innerHTML = `<article class="system-properties"><header class="system-header"><span class="photo-placeholder avatar-wrap"><img data-profile-photo alt=""><span class="photo-fallback">S</span></span><div><p class="eyebrow">SYSTEM</p><h1>${esc(profile.name)}</h1><p>${esc(profile.role)}</p><span class="status-badge">${profile.openToRoles ? 'Open to SDE roles' : 'Building'}</span></div></header><section><h2>About</h2><p>${esc(profile.bio)}</p><dl class="property-list"><dt>Location</dt><dd>${esc(profile.location)}</dd><dt>Focus</dt><dd>Backend engineering · Java · Distributed systems</dd><dt>Product</dt><dd>${link('orbitbot.in', url, 'text-link')}</dd></dl><a class="action-button" href="${esc(profile.resume)}" download>Download Resume</a></section></article>`;
+}
+function welcomeApp(body) {
+  const skills = PORTFOLIO.skills.filter(group => ['Languages', 'Backend'].includes(group.category));
+  body.innerHTML = `<article class="welcome-page">
+    <header class="system-header welcome-header">
+      <span class="photo-placeholder avatar-wrap"><img data-profile-photo alt=""><span class="photo-fallback">S</span></span>
+      <div><p class="eyebrow">SOFTWARE DEVELOPMENT ENGINEER</p><h1>${esc(profile.name)}</h1>
+      <p>${esc(profile.location)} · Graduating 2027</p>
+      <span class="status-badge">${profile.openToRoles ? 'Open to SDE roles and internships' : 'Building'}</span></div>
+    </header>
+    <section class="welcome-intro"><h2>Backend engineering with Java &amp; Spring Boot</h2>
+      <p>Computer Science undergraduate graduating in 2027, focused on backend engineering with Java and Spring Boot. Builds REST services and object-oriented systems; solved 600+ LeetCode problems.</p>
+      <div class="welcome-actions">
+        <a class="action-button" href="${esc(profile.resume)}" download>Download Resume</a>
+        <a class="action-button" href="mailto:${esc(profile.email)}">Contact</a>
+        ${link('GitHub', profile.links.github)}
+        ${link('LinkedIn', profile.links.linkedin)}
+      </div>
+    </section>
+    <section class="welcome-projects"><h2>Featured projects</h2><div class="welcome-project-grid">
+      ${PORTFOLIO.projects.map(project => `<article class="welcome-project">
+        <h3>${esc(project.name)}</h3><p>${esc(project.tagline)}</p>
+        <div class="welcome-actions">${link('Live Demo', project.live)}${link('GitHub', project.github)}
+          <button class="action-button" type="button" data-open-project="${esc(project.slug)}">Project Details</button>
+        </div>
+      </article>`).join('')}
+    </div></section>
+    <section class="welcome-skills"><h2>Core technologies</h2>
+      <div class="tag-list">${skills.flatMap(group => group.items).map(item => `<span>${esc(item)}</span>`).join('')}</div>
+    </section>
+    <p class="welcome-achievement">${esc(PORTFOLIO.achievements[0])}</p>
+  </article>`;
+  body.onclick = event => {
+    const project = event.target.closest('[data-open-project]');
+    if (project) launch('project', { slug: project.dataset.openProject });
+  };
 }
 function skillsApp(body) {
   body.innerHTML = `<article class="control-panel"><p class="eyebrow">CONTROL PANEL</p><h1>Technical Skills</h1><div class="skill-groups">${PORTFOLIO.skills.map(group => `<section class="skill-group"><h2>${esc(group.category)}</h2><div class="tag-list">${group.items.map(item => `<span>${esc(item)}</span>`).join('')}</div></section>`).join('')}</div></article>`;
@@ -192,10 +251,19 @@ function browserApp(body) {
 }
 function recycleApp(body) {
   const render = () => { body.innerHTML = `<div class="recycle-toolbar"><button class="restore-all" type="button" ${bin.length ? '' : 'disabled'}>Restore all items</button><button class="empty-bin" type="button" ${bin.length ? '' : 'disabled'}>Empty Recycle Bin</button></div><div class="recycle-list">${bin.length ? bin.map(item => `<div class="recycle-row">${svg(item.icon)}<span>${esc(item.name)}</span><button type="button" data-restore="${esc(item.id)}">Restore</button></div>`).join('') : '<p class="empty-folder">The Recycle Bin is empty.</p>'}</div>`; };
-  body.onclick = event => { const id = event.target.closest('[data-restore]')?.dataset.restore; if (id) restore(id); if (event.target.closest('.restore-all')) [...bin].forEach(item => restore(item.id)); if (event.target.closest('.empty-bin')) confirmBox('Permanently delete every item in the Recycle Bin?', () => { bin = []; render(); renderIcons(); }); };
+  body.onclick = event => { const id = event.target.closest('[data-restore]')?.dataset.restore; if (id) restore(id); if (event.target.closest('.restore-all')) [...bin].forEach(item => restore(item.id)); if (event.target.closest('.empty-bin')) confirmBox('Permanently delete every item in the Recycle Bin?', () => { bin = []; renderIcons(); refreshRecycleBins(); }); };
   render();
 }
-function restore(id) { const index = bin.findIndex(item => item.id === id); if (index < 0) return; const item = bin.splice(index, 1)[0]; items.push({ ...item, id: `restored-${Date.now()}-${Math.random()}`, app: 'notepad' }); renderIcons(); wins.filter(win => win.key === 'recycle').forEach(win => recycleApp($('.window-body', win.el))); }
+function refreshRecycleBins() { wins.filter(win => win.key === 'recycle').forEach(win => recycleApp($('.window-body', win.el))); }
+function restore(id) {
+  const index = bin.findIndex(item => item.id === id);
+  if (index < 0) return;
+  const [item] = bin.splice(index, 1);
+  if (item.desktopItem) items.push(item.desktopItem);
+  else items.push({ ...item, id: `restored-${Date.now()}-${Math.random()}`, app: 'notepad' });
+  renderIcons();
+  refreshRecycleBins();
+}
 function personalizeApp(body) {
   const colors = [['Aero Blue', '#061c46', '#0d4c99', '#53a8e8'], ['Evergreen', '#092b2c', '#12615e', '#58b995'], ['Ruby', '#360c26', '#8d2948', '#e47779'], ['Silver', '#252e39', '#637587', '#a9c5d7']];
   body.innerHTML = `<article class="personalize"><p class="eyebrow">PERSONALIZATION</p><h1>Choose a desktop color</h1><div class="palette-grid">${colors.map((c, i) => `<button class="palette-swatch" data-color="${i}" style="--swatch-top:${c[1]};--swatch-mid:${c[2]};--swatch-light:${c[3]}"><span></span><b>${esc(c[0])}</b></button>`).join('')}</div></article>`;
@@ -210,7 +278,16 @@ function bindProfilePhotos(root) {
   });
 }
 function openItem(item) { if (!item) return; if (item.url) { const url = validUrl(item.url); if (url) window.open(url, '_blank', 'noopener'); } else if (item.app === 'notepad') launch('notepad', { title: item.name, text: item.text }); else launch(item.app); }
-function deleteSelected() { $$('.desktop-icon.selected').forEach(el => { const i = items.findIndex(item => String(item.id) === el.dataset.id); if (i >= 0 && !items[i].system) bin.push(...items.splice(i, 1)); }); renderIcons(); }
+function moveItemsToRecycleBin(ids) {
+  const selected = new Set(ids.map(String));
+  const removed = items.filter(item => selected.has(String(item.id)) && !item.system);
+  if (!removed.length) return;
+  items = items.filter(item => !selected.has(String(item.id)) || item.system);
+  bin.push(...removed.map(item => ({ id: `shortcut-${item.id}`, name: item.name, icon: item.icon, desktopItem: item })));
+  renderIcons();
+  refreshRecycleBins();
+}
+function deleteSelected() { moveItemsToRecycleBin($$('.desktop-icon.selected').map(el => el.dataset.id)); }
 function confirmBox(message, action) {
   const overlay = document.createElement('div'); overlay.className = 'confirm-overlay'; overlay.innerHTML = `<section role="alertdialog" aria-modal="true" class="confirm-window"><h2>Confirm</h2><p>${esc(message)}</p><div><button data-yes type="button">Yes</button><button data-no type="button">No</button></div></section>`;
   overlay.onclick = e => { if (e.target.closest('[data-yes]')) { overlay.remove(); action(); } if (e.target.closest('[data-no]')) overlay.remove(); }; document.body.append(overlay); $('[data-no]', overlay).focus();
@@ -224,12 +301,99 @@ function closeMenus() { $$('.context-menu').forEach(el => el.remove()); }
 function desktopMenu(x, y) { menu([{ label: 'View', children: [{ label: 'Large icons', action: () => $('#icons').classList.remove('small-icons') }, { label: 'Small icons', action: () => $('#icons').classList.add('small-icons') }] }, { label: 'Sort by', children: [{ label: 'Name', action: () => { items.sort((a, b) => a.name.localeCompare(b.name)); renderIcons(); } }] }, { label: 'Refresh', action: renderIcons }, '-', { label: 'Personalize', action: () => launch('personalize') }, { label: 'Open Resume', action: () => launch('resume') }, { label: 'Contact Me', action: () => launch('contact') }], x, y); }
 function selectIcon(event) {
   const element = event.target.closest('.desktop-icon');
-  if (element) { if (!event.ctrlKey) $$('.desktop-icon.selected').forEach(el => el.classList.remove('selected')); element.classList.add('selected'); if (event.pointerType === 'touch') { const item = items.find(value => String(value.id) === element.dataset.id); if (!item?.url) openItem(item); } return; }
+  if (element) {
+    if (!event.ctrlKey && !element.classList.contains('selected')) $$('.desktop-icon.selected').forEach(el => el.classList.remove('selected'));
+    element.classList.add('selected');
+    if (event.button === 0) beginIconPointerGesture(event, element);
+    return;
+  }
   if (event.button !== 0 || event.target.closest('.win') || event.pointerType === 'touch') return;
   $$('.desktop-icon.selected').forEach(el => el.classList.remove('selected'));
   const area = $('#selection'), x = event.clientX, y = event.clientY; area.hidden = false;
   const move = e => { const left = Math.min(x, e.clientX), top = Math.min(y, e.clientY), width = Math.abs(x - e.clientX), height = Math.abs(y - e.clientY); Object.assign(area.style, { left: `${left}px`, top: `${top}px`, width: `${width}px`, height: `${height}px` }); $$('.desktop-icon').forEach(el => { const r = el.getBoundingClientRect(); el.classList.toggle('selected', r.left < left + width && r.right > left && r.top < top + height && r.bottom > top); }); };
   const up = () => { area.hidden = true; removeEventListener('pointermove', move); removeEventListener('pointerup', up); }; addEventListener('pointermove', move); addEventListener('pointerup', up, { once: true });
+}
+function beginIconPointerGesture(event, element) {
+  const item = items.find(value => String(value.id) === element.dataset.id);
+  if (!item) return;
+  const touch = event.pointerType === 'touch';
+  const gesture = {
+    pointerId: event.pointerId,
+    item,
+    element,
+    ids: $$('.desktop-icon.selected').map(icon => icon.dataset.id)
+      .filter(id => items.some(value => String(value.id) === id && !value.system)),
+    dragging: false,
+    cancelled: false,
+    ghost: null,
+    target: null,
+    timer: null
+  };
+  const startDrag = () => {
+    if (gesture.dragging || item.system) return;
+    gesture.dragging = true;
+    gesture.element.classList.add('dragging');
+    gesture.ghost = gesture.element.cloneNode(true);
+    gesture.ghost.classList.remove('selected', 'dragging');
+    gesture.ghost.classList.add('mobile-drag-ghost');
+    gesture.ghost.setAttribute('aria-hidden', 'true');
+    gesture.ghost.removeAttribute('data-id');
+    document.body.append(gesture.ghost);
+    gesture.ghost.style.left = `${event.clientX}px`;
+    gesture.ghost.style.top = `${event.clientY}px`;
+  };
+  const clear = () => {
+    clearTimeout(gesture.timer);
+    removeEventListener('pointermove', move);
+    removeEventListener('pointerup', end);
+    removeEventListener('pointercancel', cancel);
+    gesture.ghost?.remove();
+    gesture.element.classList.remove('dragging');
+    gesture.target?.classList.remove('drop-target');
+  };
+  const move = moveEvent => {
+    if (moveEvent.pointerId !== gesture.pointerId) return;
+    if (!gesture.dragging) {
+      const distance = Math.hypot(moveEvent.clientX - event.clientX, moveEvent.clientY - event.clientY);
+      if (touch && distance > 12) {
+        gesture.cancelled = true;
+        clearTimeout(gesture.timer);
+      } else if (!touch && distance > 6) {
+        startDrag();
+      }
+      if (!gesture.dragging) return;
+    }
+    moveEvent.preventDefault();
+    gesture.ghost.style.left = `${moveEvent.clientX}px`;
+    gesture.ghost.style.top = `${moveEvent.clientY}px`;
+    const target = document.elementFromPoint(moveEvent.clientX, moveEvent.clientY)?.closest('.desktop-icon');
+    if (gesture.target !== target) {
+      gesture.target?.classList.remove('drop-target');
+      gesture.target = target?.dataset.id === 'recycle' ? target : null;
+      gesture.target?.classList.add('drop-target');
+    }
+  };
+  const end = endEvent => {
+    if (endEvent.pointerId !== gesture.pointerId) return;
+    const dragged = gesture.dragging;
+    const target = dragged && document.elementFromPoint(endEvent.clientX, endEvent.clientY)?.closest('.desktop-icon');
+    if (dragged && target?.dataset.id === 'recycle') moveItemsToRecycleBin(gesture.ids);
+    clear();
+    if (dragged) { endEvent.preventDefault(); suppressDesktopClickUntil = Date.now() + 500; }
+    else if (touch && !gesture.cancelled && !item.url) openItem(item);
+  };
+  const cancel = cancelEvent => {
+    if (cancelEvent.pointerId !== gesture.pointerId) return;
+    clear();
+  };
+  if (touch && !item.system) {
+    gesture.timer = setTimeout(() => {
+      startDrag();
+    }, 420);
+  }
+  addEventListener('pointermove', move, { passive: false });
+  addEventListener('pointerup', end);
+  addEventListener('pointercancel', cancel);
 }
 function renderStart() {
   const q = $('#search').value.trim().toLowerCase(), keys = q || allPrograms ? appOrder.filter(key => `${apps[key][0]} ${key}`.toLowerCase().includes(q)) : pinned;
@@ -240,10 +404,64 @@ function renderStart() {
 function toggleStart() { const start = $('#start'); if (!start.hidden) { start.hidden = true; return; } closeMenus(); $('#calendar').hidden = true; start.hidden = false; $('#search').value = ''; allPrograms = false; renderStart(); $('#search').focus(); }
 function updateClock() { const d = new Date(); $('#clock').innerHTML = `<span>${esc(d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }))}</span><small>${esc(d.toLocaleDateString())}</small>`; }
 function calendar() { const d = new Date(), first = new Date(d.getFullYear(), d.getMonth(), 1).getDay(), days = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); $('#calendar').innerHTML = `<h2>${esc(d.toLocaleString([], { month: 'long', year: 'numeric' }))}</h2><div class="calendar-grid">${['S','M','T','W','T','F','S'].map(x => `<b>${x}</b>`).join('')}${'<i></i>'.repeat(first)}${Array.from({ length: days }, (_, i) => `<span class="${i + 1 === d.getDate() ? 'today' : ''}">${i + 1}</span>`).join('')}</div>`; }
+function renderNetworkPanel() {
+  const connected = wifiEnabled && connectedNetwork;
+  $('#networkToggle').setAttribute('aria-label', connected ? `Network: ${connectedNetwork} connected` : wifiEnabled ? 'Network: Not connected' : 'Network: Wi-Fi off');
+  $('#networkToggle use').setAttribute('href', wifiEnabled ? '#i-wifi' : '#i-wifi-off');
+  $('#networkSummary').textContent = connected ? `Connected to ${connectedNetwork}` : wifiEnabled ? 'Not connected' : 'Wi-Fi is off';
+  $('#networkFooter').textContent = connected ? 'Internet access' : 'No internet access';
+  $('#disconnectNetwork').disabled = !connected;
+  $$('.network-option').forEach(option => {
+    const active = connected && option.dataset.network === connectedNetwork;
+    option.disabled = !wifiEnabled;
+    $('.network-state', option).textContent = active ? 'Connected' : '';
+    option.setAttribute('aria-pressed', String(Boolean(active)));
+  });
+}
+function renderSoundPanel() {
+  const audible = !soundMuted && portfolioVolume > 0;
+  $('#soundToggle use').setAttribute('href', audible ? '#i-volume' : '#i-volume-muted');
+  $('#soundToggle').setAttribute('aria-label', soundMuted ? `Volume: muted, ${portfolioVolume}%` : `Volume: ${portfolioVolume}%`);
+  $('#volumeSlider').value = String(portfolioVolume);
+  $('#volumeSummary').textContent = soundMuted ? 'Muted' : `${portfolioVolume}% volume`;
+  $('#volumeValue').value = String(portfolioVolume);
+  $('#volumeValue').textContent = String(portfolioVolume);
+  $('#muteToggle use').setAttribute('href', audible ? '#i-volume' : '#i-volume-muted');
+  $('#muteToggle').setAttribute('aria-label', audible ? 'Mute sound' : 'Unmute sound');
+  $('#muteToggle').title = audible ? 'Mute' : 'Unmute';
+}
+function closeTrayPanels() {
+  $('#networkPanel').hidden = true; $('#soundPanel').hidden = true;
+  $('#networkToggle').setAttribute('aria-expanded', 'false'); $('#soundToggle').setAttribute('aria-expanded', 'false');
+}
+function toggleTrayPanel(panel) {
+  const opening = panel.hidden;
+  closeTrayPanels();
+  $('#start').hidden = true; $('#calendar').hidden = true;
+  if (opening) {
+    panel.hidden = false;
+    $(`#${panel.id === 'networkPanel' ? 'networkToggle' : 'soundToggle'}`).setAttribute('aria-expanded', 'true');
+  }
+}
+function playPortfolioSound() {
+  if (soundMuted || portfolioVolume === 0) return;
+  const C = window.AudioContext || window.webkitAudioContext;
+  if (!C) return;
+  const context = new C(), now = context.currentTime, gain = portfolioVolume / 100;
+  [523, 659, 784].forEach((frequency, index) => {
+    const start = now + index * .15, oscillator = context.createOscillator(), envelope = context.createGain();
+    oscillator.frequency.value = frequency;
+    envelope.gain.setValueAtTime(.001, start);
+    envelope.gain.exponentialRampToValueAtTime(.07 * gain, start + .04);
+    envelope.gain.exponentialRampToValueAtTime(.001, start + .5);
+    oscillator.connect(envelope).connect(context.destination);
+    oscillator.start(start); oscillator.stop(start + .55);
+  });
+  setTimeout(() => context.close(), 1000);
+}
 function showDesktop() { if (!showDesk) { wins.filter(w => !w.min).forEach(minimize); showDesk = true; } else { const w = wins.find(item => item.min); if (w) focus(w); showDesk = false; } }
-function chime() { try { const C = window.AudioContext || window.webkitAudioContext; if (!C) return; const c = new C(), t = c.currentTime; [523, 659, 784].forEach((f, i) => { const o = c.createOscillator(), g = c.createGain(); o.frequency.value = f; g.gain.setValueAtTime(.001, t + i * .15); g.gain.exponentialRampToValueAtTime(.07, t + i * .15 + .04); g.gain.exponentialRampToValueAtTime(.001, t + i * .15 + .5); o.connect(g).connect(c.destination); o.start(t + i * .15); o.stop(t + i * .15 + .55); }); setTimeout(() => c.close(), 1000); } catch (_) {} }
-function firstVisit() { try { return localStorage.getItem('sameer-portfolio-welcomed') !== '1'; } catch (_) { return true; } }
-function login() { if (phase !== 'login') return; phase = 'run'; $('#login').hidden = true; chime(); if (firstVisit()) { try { localStorage.setItem('sameer-portfolio-welcomed', '1'); } catch (_) {} launch('resume'); launch('notepad', { title: 'Welcome.txt - Notepad', text: `Welcome to ${profile.name}'s portfolio.\n\nOpen Resume for a quick overview. Browse Projects, or use Start to find skills, education, and contact details.\n\nThanks for stopping by.` }); } }
+function chime() { try { playPortfolioSound(); } catch (_) {} }
+function login() { if (phase !== 'login') return; phase = 'run'; $('#login').hidden = true; chime(); launch('welcome'); }
 function showLogin() { if (phase !== 'boot') return; clearTimeout(timer); phase = 'login'; $('#boot').hidden = true; $('#login').hidden = false; $('#loginBtn').focus(); }
 function boot() { clearTimeout(timer); phase = 'boot'; $('#powerScreen').hidden = true; $('#login').hidden = true; $('#boot').hidden = false; timer = setTimeout(showLogin, 900); }
 function power(action) {
@@ -257,9 +475,10 @@ function init() {
   $('#startName').textContent = profile.name; $('#loginName').textContent = profile.name;
   bindProfilePhotos(document);
   $('#startGithub').href = validUrl(profile.links.github) || '#'; $('#startLinkedin').href = validUrl(profile.links.linkedin) || '#';
-  renderIcons(); updateClock(); setInterval(updateClock, 1000); boot();
-  $('#icons').addEventListener('pointerdown', selectIcon); $('#desktop').addEventListener('pointerdown', selectIcon);
-  $('#icons').onclick = e => { const item = items.find(value => String(value.id) === e.target.closest('.desktop-icon')?.dataset.id); if (e.detail === 1 && item?.url) openItem(item); };
+  renderIcons(); updateClock(); setInterval(updateClock, 1000);
+  phase = 'run'; $('#boot').hidden = true; $('#login').hidden = true; launch('welcome');
+  $('#desktop').addEventListener('pointerdown', selectIcon);
+  $('#icons').onclick = e => { if (Date.now() < suppressDesktopClickUntil) return; const item = items.find(value => String(value.id) === e.target.closest('.desktop-icon')?.dataset.id); if (e.detail === 1 && item?.url) openItem(item); };
   $('#icons').ondblclick = e => { const item = items.find(value => String(value.id) === e.target.closest('.desktop-icon')?.dataset.id); if (!item?.url) openItem(item); };
   $('#icons').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openItem(items.find(item => String(item.id) === e.target.closest('.desktop-icon')?.dataset.id)); } };
   $('#desktop').oncontextmenu = e => { if (e.target.closest('.win')) return; e.preventDefault(); const el = e.target.closest('.desktop-icon'); if (!el) return desktopMenu(e.clientX, e.clientY); const item = items.find(value => String(value.id) === el.dataset.id); menu([{ label: 'Open', action: () => openItem(item) }, ...(item.system ? [] : [{ label: 'Delete', action: () => { el.classList.add('selected'); deleteSelected(); } }])], e.clientX, e.clientY); };
@@ -267,18 +486,30 @@ function init() {
   $('#all').onclick = () => { allPrograms = !allPrograms; $('#all').textContent = allPrograms ? '◀ Back' : '▶ All Programs'; renderStart(); };
   $('#start').onclick = e => { const app = e.target.closest('[data-app]'), project = e.target.closest('[data-project]'); if (app) { $('#start').hidden = true; launch(app.dataset.app); } if (project) { $('#start').hidden = true; launch('project', { slug: project.dataset.project }); } };
   $('#pins').onclick = e => { const button = e.target.closest('[data-app]'); if (button) launch(button.dataset.app); };
+  $('#networkToggle').onclick = () => { renderNetworkPanel(); toggleTrayPanel($('#networkPanel'), $('#soundPanel')); };
+  $('#soundToggle').onclick = () => { renderSoundPanel(); toggleTrayPanel($('#soundPanel'), $('#networkPanel')); };
+  $$('.panel-close').forEach(button => { button.onclick = closeTrayPanels; });
+  $('#wifiEnabled').onchange = event => { wifiEnabled = event.currentTarget.checked; renderNetworkPanel(); };
+  $('#networkPanel').onclick = event => {
+    const option = event.target.closest('.network-option');
+    if (option && wifiEnabled) { connectedNetwork = option.dataset.network; renderNetworkPanel(); return; }
+    if (event.target.closest('#disconnectNetwork')) { connectedNetwork = ''; renderNetworkPanel(); }
+  };
+  $('#volumeSlider').oninput = event => { portfolioVolume = Number(event.currentTarget.value); if (portfolioVolume > 0) soundMuted = false; renderSoundPanel(); };
+  $('#muteToggle').onclick = () => { soundMuted = !soundMuted; renderSoundPanel(); };
+  $('#testSound').onclick = playPortfolioSound;
   $('#shut').onclick = () => power('shutdown'); $('#shutArrow').onclick = e => { const r = e.currentTarget.getBoundingClientRect(); menu([{ label: 'Restart', action: () => power('restart') }, { label: 'Log off', action: () => power('logoff') }, { label: 'Lock', action: () => power('lock') }, { label: 'Sleep', action: () => power('sleep') }], r.right, r.top - 140); };
-  $('#clock').onclick = () => { const el = $('#calendar'); if (!el.hidden) { el.hidden = true; return; } closeMenus(); $('#start').hidden = true; calendar(); el.hidden = false; };
+  $('#clock').onclick = () => { const el = $('#calendar'); if (!el.hidden) { el.hidden = true; return; } closeMenus(); closeTrayPanels(); $('#start').hidden = true; calendar(); el.hidden = false; };
   $('#peek').onclick = showDesktop; $('#boot').onclick = showLogin; $('#loginBtn').onclick = login;
   $('#powerScreen').onclick = () => { if (phase === 'off') boot(); else if (phase === 'sleep') { $('#powerScreen').hidden = true; phase = 'run'; } };
-  document.addEventListener('pointerdown', e => { if (!e.target.closest('#start,#orb,.context-menu,#calendar,#clock')) { $('#start').hidden = true; $('#calendar').hidden = true; closeMenus(); } }, true);
+  document.addEventListener('pointerdown', e => { if (!e.target.closest('#start,#orb,.context-menu,#calendar,#clock,#networkPanel,#soundPanel,#networkToggle,#soundToggle')) { $('#start').hidden = true; $('#calendar').hidden = true; closeTrayPanels(); closeMenus(); } }, true);
   document.addEventListener('keydown', e => {
     if (phase === 'boot') { showLogin(); return; } if (phase === 'login') { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); login(); } return; }
     if (e.key === 'Meta') return;
     if ((e.metaKey && e.key.toLowerCase() === 'd') || (e.ctrlKey && e.key.toLowerCase() === 'd')) { e.preventDefault(); showDesktop(); }
     else if (e.ctrlKey && e.key === 'Escape') { e.preventDefault(); toggleStart(); }
     else if (e.altKey && e.key === 'F4') { e.preventDefault(); if (current) closeWindow(current); }
-    else if (e.key === 'Escape') { $('#start').hidden = true; $('#calendar').hidden = true; closeMenus(); }
+    else if (e.key === 'Escape') { $('#start').hidden = true; $('#calendar').hidden = true; closeTrayPanels(); closeMenus(); }
     else if (e.key === 'Delete' && !e.target.matches('input,textarea')) deleteSelected();
   });
   document.addEventListener('keyup', e => { if (e.key === 'Meta' && phase === 'run') toggleStart(); });

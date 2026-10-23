@@ -7,8 +7,10 @@
   <meta property="og:title" content="Sameer | Backend Developer Portfolio">
   <meta property="og:description" content="Explore Sameer's resume, Java and Spring Boot projects, technical skills, and education in a Windows 7-inspired desktop.">
   <meta property="og:type" content="website">
+  <meta property="og:url" content="https://me.orbitbot.in">
   <meta name="theme-color" content="#0b3c74">
   <title>Sameer SDE</title>
+  <link rel="canonical" href="https://me.orbitbot.in">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -32,6 +34,9 @@
     <symbol id="i-browser" viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="#1689c7"/><path fill="none" stroke="#f4cf31" stroke-width="2" d="M4 17c7-7 18-7 24-1M7 24c5-4 14-5 20-2"/><path fill="#fff" d="M9 14c2-8 14-9 16-2-4-2-10-1-16 2z"/></symbol>
     <symbol id="i-network" viewBox="0 0 16 16"><path fill="#fff" d="M1 13V9h3v4zm5 0V6h3v7zm5 0V2h3v11z"/></symbol>
     <symbol id="i-volume" viewBox="0 0 16 16"><path fill="#fff" d="M1 6h3l4-3v10l-4-3H1zM10 5q4 3 0 6m2-8q6 5 0 10"/></symbol>
+    <symbol id="i-wifi" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2.2" d="M2.5 8.8a14.2 14.2 0 0 1 19 0M6 12.4a9 9 0 0 1 12 0m-8.5 3.5a3.8 3.8 0 0 1 5 0"/><circle cx="12" cy="19.3" r="1.4" fill="currentColor"/></symbol>
+    <symbol id="i-wifi-off" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2.2" d="M3 3l18 18M9 8.6a14 14 0 0 1 12.5.2M5.3 12.5c.6-.5 1.2-.9 1.9-1.2m3.8 4.7a3.8 3.8 0 0 1 5 0"/><circle cx="12" cy="19.3" r="1.4" fill="currentColor"/></symbol>
+    <symbol id="i-volume-muted" viewBox="0 0 16 16"><path fill="currentColor" d="M1 6h3l4-3v10l-4-3H1z"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.6" d="m11 6 4 4m0-4-4 4"/></symbol>
     <symbol id="i-center" viewBox="0 0 16 16"><path fill="#fff" d="M8 1 2 4v4c0 4 3 6 6 7 3-1 6-3 6-7V4zm0 3 1 3 3 .2-2.3 1.8.8 3L8 10.5l-2.5 1.6.8-3L4 7.2 7 7z"/></symbol>
   </defs></svg>
   <main id="desktop" aria-label="Sameer's portfolio desktop"><div id="icons" aria-label="Desktop shortcuts"></div><div id="selection" hidden aria-hidden="true"></div><div id="windows"></div></main>
@@ -39,9 +44,26 @@
     <button id="orb" type="button" aria-label="Open Start menu" title="Start"><svg><use href="#i-windows"></use></svg></button>
     <div id="pins" aria-label="Pinned apps"><button type="button" data-app="resume" aria-label="Resume" title="Resume"><svg><use href="#i-resume"></use></svg></button><button type="button" data-app="projects" aria-label="Projects" title="Projects"><svg><use href="#i-folder"></use></svg></button><button type="button" data-app="contact" aria-label="Contact" title="Contact"><svg><use href="#i-contact"></use></svg></button></div>
     <div id="tasks" aria-label="Running apps"></div>
-    <div id="tray"><svg class="tray-icon" aria-label="Network"><use href="#i-network"></use></svg><svg class="tray-icon" aria-label="Volume"><use href="#i-volume"></use></svg><svg class="tray-icon" aria-label="Action center"><use href="#i-center"></use></svg><button id="clock" type="button" aria-label="Open calendar"></button></div>
+    <div id="tray"><button id="networkToggle" class="tray-trigger" type="button" aria-label="Network: Orbitbot Wi-Fi connected" title="Network"><svg class="tray-icon"><use href="#i-wifi"></use></svg></button><button id="soundToggle" class="tray-trigger" type="button" aria-label="Volume: 70%" title="Volume"><svg class="tray-icon"><use href="#i-volume"></use></svg></button><svg class="tray-icon" aria-label="Action center"><use href="#i-center"></use></svg><button id="clock" type="button" aria-label="Open calendar"></button></div>
     <button id="peek" type="button" aria-label="Show desktop" title="Show desktop"></button>
   </div>
+  <section id="networkPanel" class="tray-panel" aria-label="Network connections" hidden>
+    <header><div><strong>Network</strong><small id="networkSummary">Connected</small></div><button class="panel-close" type="button" aria-label="Close network panel">×</button></header>
+    <label class="tray-switch"><span><strong>Wi-Fi</strong><small>Wireless network access</small></span><input id="wifiEnabled" type="checkbox" checked><span class="switch-ui" aria-hidden="true"></span></label>
+    <div class="network-list" aria-label="Available networks">
+      <button type="button" class="network-option" data-network="Orbitbot Wi-Fi" data-security="Secured"><svg><use href="#i-wifi"></use></svg><span><strong>Orbitbot Wi-Fi</strong><small>Secured · Signal: Excellent</small></span><span class="network-state"></span></button>
+      <button type="button" class="network-option" data-network="Sameer_5G" data-security="Secured"><svg><use href="#i-wifi"></use></svg><span><strong>Sameer_5G</strong><small>Secured · Signal: Very good</small></span><span class="network-state"></span></button>
+      <button type="button" class="network-option" data-network="Guest Network" data-security="Open"><svg><use href="#i-wifi"></use></svg><span><strong>Guest Network</strong><small>Open network · Signal: Good</small></span><span class="network-state"></span></button>
+    </div>
+    <footer><span id="networkFooter">Internet access</span><button id="disconnectNetwork" type="button">Disconnect</button></footer>
+    <small class="panel-disclaimer">Simulated network controls — your device connection is unchanged.</small>
+  </section>
+  <section id="soundPanel" class="tray-panel sound-panel" aria-label="Volume control" hidden>
+    <header><div><strong>Speakers</strong><small id="volumeSummary">70% volume</small></div><button class="panel-close" type="button" aria-label="Close sound panel">×</button></header>
+    <div class="volume-control"><button id="muteToggle" type="button" aria-label="Mute sound" title="Mute"><svg class="tray-icon"><use href="#i-volume"></use></svg></button><input id="volumeSlider" type="range" min="0" max="100" value="70" aria-label="Portfolio sound volume"><output id="volumeValue" for="volumeSlider">70</output></div>
+    <button id="testSound" class="test-sound" type="button">Test portfolio sound</button>
+    <small class="panel-disclaimer">Controls sounds played by this portfolio only; system volume is unchanged.</small>
+  </section>
   <section id="start" class="glass" aria-label="Start menu" hidden>
     <div class="start-left"><ul id="plist" role="menu" aria-label="Programs"></ul><button id="all" type="button" aria-expanded="false">▶ All Programs</button><input id="search" type="search" placeholder="Search programs and projects" aria-label="Search programs and projects"></div>
     <div class="start-right"><div class="start-user"><span class="avatar-wrap small"><img id="startPhoto" data-profile-photo alt=""><span class="photo-fallback">S</span></span><strong id="startName"></strong></div><button type="button" data-app="resume">Resume</button><button type="button" data-app="projects">Projects</button><button type="button" data-app="skills">Skills</button><button type="button" data-app="contact">Contact</button><a id="startGithub" target="_blank" rel="noopener">GitHub</a><a id="startLinkedin" target="_blank" rel="noopener">LinkedIn</a><div class="power-row"><button id="shut" type="button">Shut down</button><button id="shutArrow" type="button" aria-label="Power options">▾</button></div></div>
@@ -50,7 +72,7 @@
   <section id="boot" aria-live="polite"><svg class="boot-logo"><use href="#i-windows"></use></svg><p>Starting Windows</p><div class="boot-progress"><i></i></div></section>
   <section id="login" aria-label="Login" hidden><span class="avatar-wrap login-avatar"><img id="loginPhoto" data-profile-photo alt=""><span class="photo-fallback">S</span></span><h1 id="loginName"></h1><p>Welcome to Sameer's Portfolio</p><button id="loginBtn" type="button">Log in <span aria-hidden="true">➜</span></button><small>Press Enter to continue</small></section>
   <template id="windowTemplate"><section class="win" role="dialog" aria-modal="false"><header class="titlebar"><svg class="window-icon" aria-hidden="true"><use href="#i-folder"></use></svg><span class="window-title"></span><div class="window-controls"><button class="minimize" type="button" aria-label="Minimize" title="Minimize">−</button><button class="maximize" type="button" aria-label="Maximize or restore" title="Maximize">□</button><button class="close" type="button" aria-label="Close" title="Close">×</button></div></header><div class="window-body"></div></section></template>
-  <noscript><main class="noscript-content"><h1>Sameer | Backend Developer / SDE</h1><p>Computer Science undergraduate (graduating 2027) focused on backend engineering with Java and Spring Boot. Builds and deploys REST services and object-oriented systems, backed by 600+ solved LeetCode problems. Seeking entry-level SDE roles and software engineering internships.</p><p>B.Tech. in Computer Science and Engineering, Dr. A.P.J. Abdul Kalam Technical University, Lucknow, 2023–2027. Senior Secondary, Class XII, 2022–2023.</p><h2>Projects</h2><ul><li>SquareOne – Workspace: <a href="https://docs.orbitbot.in/">Live app</a> · <a href="https://github.com/md2004sameer/squareone">GitHub</a> — document revisions, restore, and PostgreSQL production database.</li><li>Chess Engine: <a href="https://chess.orbitbot.in/">Live app</a> · <a href="https://github.com/md2004sameer/Chess">GitHub</a> — Java engine with minimax AI, alpha-beta pruning, and REST API.</li></ul><p>Solved 600+ LeetCode problems and ranked in the platform’s top 10%.</p><p>Contact: <a href="mailto:md2004sameer01@gmail.com">md2004sameer01@gmail.com</a> · <a href="tel:+919793520310">+91-9793520310</a></p><p><a href="https://github.com/md2004sameer">GitHub</a> · <a href="https://linkedin.com/in/sameerog">LinkedIn</a> · <a href="https://leetcode.com/u/sameerog">LeetCode</a></p></main></noscript>
+  <noscript><main class="noscript-content"><h1>Sameer | SDE</h1><p>Computer Science undergraduate (graduating 2027) focused on backend engineering with Java and Spring Boot. Builds and deploys REST services and object-oriented systems, backed by 600+ solved LeetCode problems. Seeking entry-level SDE roles and software engineering internships.</p><p>B.Tech. in Computer Science and Engineering, Dr. A.P.J. Abdul Kalam Technical University, Lucknow, 2023–2027. Senior Secondary, Class XII, 2022–2023. Secondary, Class X, 2020–2021.</p><h2>Projects</h2><ul><li>SquareOne – Workspace: <a href="https://docs.orbitbot.in/">Live app</a> · <a href="https://github.com/md2004sameer/squareone">GitHub</a> — document revisions, restore, and PostgreSQL production database.</li><li>Chess Engine: <a href="https://chess.orbitbot.in/">Live app</a> · <a href="https://github.com/md2004sameer/Chess">GitHub</a> — Java engine with minimax AI, alpha-beta pruning, and REST API.</li></ul><p>Solved 600+ LeetCode problems and ranked in the platform’s top 10%.</p><p>Contact: <a href="mailto:md2004sameer01@gmail.com">md2004sameer01@gmail.com</a> · <a href="tel:+919793520310">+91-9793520310</a></p><p><a href="https://me.orbitbot.in">Portfolio</a> · <a href="https://github.com/md2004sameer">GitHub</a> · <a href="https://linkedin.com/in/sameerog">LinkedIn</a> · <a href="https://leetcode.com/u/sameerog">LeetCode</a></p></main></noscript>
   <script src="data.js"></script><script src="script.js"></script>
 </body>
 </html>
